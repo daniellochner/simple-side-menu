@@ -22,8 +22,8 @@ namespace DanielLochner.Assets.SimpleSideMenu
         [SerializeField] private float thresholdDragSpeed = 0f;
         [SerializeField] private float thresholdDraggedFraction = 0.5f;
         [SerializeField] private GameObject handle = null;
-        [SerializeField] private bool handleDraggable = true;
-        [SerializeField] private bool menuDraggable = false;
+        [SerializeField] private bool isHandleDraggable = true;
+        [SerializeField] private bool isMenuDraggable = false;
         [SerializeField] private bool handleToggleStateOnPressed = true;
 
         // Overlay Settings
@@ -35,10 +35,10 @@ namespace DanielLochner.Assets.SimpleSideMenu
         [SerializeField] private bool overlayCloseOnPressed = true;
 
         // Events
-        [SerializeField] private UnityEvent onStateSelecting = new UnityEvent();
-        [SerializeField] private UnityEvent onStateSelected = new UnityEvent();
-        [SerializeField] private UnityEvent onStateChanging = new UnityEvent();
-        [SerializeField] private UnityEvent onStateChanged = new UnityEvent();
+        [SerializeField] private UnityEvent<State> onStateSelecting = new UnityEvent<State>();
+        [SerializeField] private UnityEvent<State> onStateSelected = new UnityEvent<State>();
+        [SerializeField] private UnityEvent<State, State> onStateChanging = new UnityEvent<State, State>();
+        [SerializeField] private UnityEvent<State, State> onStateChanged = new UnityEvent<State, State>();
 
         private float previousTime;
         private bool isDragging, isPotentialDrag;
@@ -84,13 +84,13 @@ namespace DanielLochner.Assets.SimpleSideMenu
         }
         public bool HandleDraggable
         {
-            get => handleDraggable;
-            set => handleDraggable = value;
+            get => isHandleDraggable;
+            set => isHandleDraggable = value;
         }
         public bool MenuDraggable
         {
-            get => menuDraggable;
-            set => menuDraggable = value;
+            get => isMenuDraggable;
+            set => isMenuDraggable = value;
         }
         public bool HandleToggleStateOnPressed
         {
@@ -122,19 +122,19 @@ namespace DanielLochner.Assets.SimpleSideMenu
             get => overlayCloseOnPressed;
             set => overlayCloseOnPressed = value;
         }
-        public UnityEvent OnStateSelecting
+        public UnityEvent<State> OnStateSelecting
         {
             get => onStateSelecting;
         }
-        public UnityEvent OnStateSelected
+        public UnityEvent<State> OnStateSelected
         {
             get => onStateSelected;
         }
-        public UnityEvent OnStateChanging
+        public UnityEvent<State, State> OnStateChanging
         {
             get => onStateChanged;
         }
-        public UnityEvent OnStateChanged
+        public UnityEvent<State, State> OnStateChanged
         {
             get => onStateChanged;
         }
@@ -169,7 +169,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
                     Debug.LogError("<b>[SimpleSideMenu]</b> Transition speed cannot be less than or equal to zero.", gameObject);
                     valid = false;
                 }
-                if (handle != null && handleDraggable && handle.transform.parent != rectTransform)
+                if (handle != null && isHandleDraggable && handle.transform.parent != rectTransform)
                 {
                     Debug.LogError("<b>[SimpleSideMenu]</b> The drag handle must be a child of the side menu in order for it to be draggable.", gameObject);
                     valid = false;
@@ -215,7 +215,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
 
         public void OnInitializePotentialDrag(PointerEventData eventData)
         {
-            isPotentialDrag = (handleDraggable && eventData.pointerEnter == handle) || (menuDraggable && eventData.pointerEnter == gameObject);
+            isPotentialDrag = (isHandleDraggable && eventData.pointerEnter == handle) || (isMenuDraggable && eventData.pointerEnter == gameObject);
         }
         public void OnBeginDrag(PointerEventData eventData)
         {
@@ -238,7 +238,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
                 Vector2 max = new Vector2(Math.Max(closedPosition.x, openPosition.x), Math.Max(closedPosition.y, openPosition.y));
                 rectTransform.anchoredPosition = new Vector2(Mathf.Clamp(x, min.x, max.x), Mathf.Clamp(y, min.y, max.y));
 
-                onStateSelecting.Invoke();
+                onStateSelecting.Invoke(CurrentState);
             }
 
             dragVelocity = (rectTransform.position - previousPosition) / (Time.time - previousTime);
@@ -442,11 +442,11 @@ namespace DanielLochner.Assets.SimpleSideMenu
                     if ((rectTransform.anchoredPosition - targetPosition).magnitude <= rectTransform.rect.width / 10f)
                     {
                         CurrentState = TargetState;
-                        onStateChanged.Invoke();
+                        onStateChanged.Invoke(CurrentState, TargetState);
                     }
                     else
                     {
-                        onStateChanging.Invoke();
+                        onStateChanging.Invoke(CurrentState, TargetState);
                     }
                 }
             }
@@ -467,9 +467,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
 
         public void SetState(State state)
         {
-            TargetState = state;
-
-            onStateSelected.Invoke();
+            onStateSelected.Invoke(TargetState = state);
         }
         public void ToggleState()
         {
