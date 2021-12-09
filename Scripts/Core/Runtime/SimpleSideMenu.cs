@@ -1,6 +1,5 @@
 ﻿// Simple Side-Menu - https://assetstore.unity.com/packages/tools/gui/simple-side-menu-143623
-// Version: 1.0.3
-// Author: Daniel Lochner
+// Copyright (c) Daniel Lochner
 
 using System;
 using UnityEngine;
@@ -14,22 +13,25 @@ namespace DanielLochner.Assets.SimpleSideMenu
     public class SimpleSideMenu : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IInitializePotentialDragHandler
     {
         #region Fields
-        public Placement placement = Placement.Left;
-        public State defaultState = State.Closed;
-        public float transitionSpeed = 10f;
-        public float thresholdDragSpeed = 0f;
-        public float thresholdDraggedFraction = 0.5f;
-        public GameObject handle = null;
-        public bool handleDraggable = true;
-        public bool menuDraggable = false;
-        public bool handleToggleStateOnPressed = true;
-        public bool useOverlay = true;
-        public Color overlayColour = new Color(0, 0, 0, 0.25f);
-        public bool useBlur = false;
-        public int blurRadius = 10;
-        public bool overlayCloseOnPressed = true;
-        public UnityEvent onStateChanged, onStateSelected, onStateChanging, onStateSelecting;
-        public Material blurMaterial;
+        [SerializeField] private Placement placement = Placement.Left;
+        [SerializeField] private State defaultState = State.Closed;
+        [SerializeField] private float transitionSpeed = 10f;
+        [SerializeField] private float thresholdDragSpeed = 0f;
+        [SerializeField] private float thresholdDraggedFraction = 0.5f;
+        [SerializeField] private GameObject handle = null;
+        [SerializeField] private bool handleDraggable = true;
+        [SerializeField] private bool menuDraggable = false;
+        [SerializeField] private bool handleToggleStateOnPressed = true;
+        [SerializeField] private bool useOverlay = true;
+        [SerializeField] private Color overlayColour = new Color(0, 0, 0, 0.25f);
+        [SerializeField] private bool useBlur = false;
+        [SerializeField] private int blurRadius = 10;
+        [SerializeField] private bool overlayCloseOnPressed = true;
+        [SerializeField] private UnityEvent onStateSelecting = new UnityEvent();
+        [SerializeField] private UnityEvent onStateSelected = new UnityEvent();
+        [SerializeField] private UnityEvent onStateChanging = new UnityEvent();
+        [SerializeField] private UnityEvent onStateChanged = new UnityEvent();
+        [SerializeField] private Material blurMaterial;
 
         private float previousTime;
         private bool dragging, potentialDrag;
@@ -43,25 +45,97 @@ namespace DanielLochner.Assets.SimpleSideMenu
         #endregion
 
         #region Properties
+        public Placement Placement
+        {
+            get => placement;
+            set => placement = value;
+        }
+        public State DefaultState
+        {
+            get => defaultState;
+            set => defaultState = value;
+        }
+        public float TransitionSpeed
+        {
+            get => transitionSpeed;
+            set => transitionSpeed = value;
+        }
+        public float ThresholdDragSpeed
+        {
+            get => thresholdDragSpeed;
+            set => thresholdDragSpeed = value;
+        }
+        public float ThresholdDraggedFraction
+        {
+            get => thresholdDraggedFraction;
+            set => thresholdDraggedFraction = value;
+        }
+        public GameObject Handle
+        {
+            get => handle;
+            set => handle = value;
+        }
+        public bool HandleDraggable
+        {
+            get => handleDraggable;
+            set => handleDraggable = value;
+        }
+        public bool MenuDraggable
+        {
+            get => menuDraggable;
+            set => menuDraggable = value;
+        }
+        public bool HandleToggleStateOnPressed
+        {
+            get => handleToggleStateOnPressed;
+            set => handleToggleStateOnPressed = value;
+        }
+        public bool UseOverlay
+        {
+            get => useOverlay;
+            set => useOverlay = value;
+        }
+        public Color OverlayColour
+        {
+            get => overlayColour;
+            set => overlayColour = value;
+        }
+        public bool UseBlur
+        {
+            get => useBlur;
+            set => useBlur = value;
+        }
+        public int BlurRadius
+        {
+            get => blurRadius;
+            set => blurRadius = value;
+        }
+        public bool OverlayCloseOnPressed
+        {
+            get => overlayCloseOnPressed;
+            set => overlayCloseOnPressed = value;
+        }
+        public UnityEvent OnStateSelecting
+        {
+            get => onStateSelecting;
+        }
+        public UnityEvent OnStateSelected
+        {
+            get => onStateSelected;
+        }
+        public UnityEvent OnStateChanging
+        {
+            get => onStateChanged;
+        }
+        public UnityEvent OnStateChanged
+        {
+            get => onStateChanged;
+        }
+
         public State CurrentState { get; set; }
         public State TargetState { get; set; }
 
         public float StateProgress { get { return ((rectTransform.anchoredPosition - closedPosition).magnitude / ((placement == Placement.Left || placement == Placement.Right) ? rectTransform.rect.width : rectTransform.rect.height)); } }
-        #endregion
-
-        #region Enumerators
-        public enum Placement
-        {
-            Left,
-            Right,
-            Top,
-            Bottom
-        }
-        public enum State
-        {
-            Closed,
-            Open
-        }
         #endregion
 
         #region Methods
@@ -394,4 +468,20 @@ namespace DanielLochner.Assets.SimpleSideMenu
         }     
         #endregion
     }
+
+    #region Enumerators
+    public enum Placement
+    {
+        Left,
+        Right,
+        Top,
+        Bottom
+    }
+    public enum State
+    {
+        Closed,
+        Open
+    }
+    #endregion
+
 }

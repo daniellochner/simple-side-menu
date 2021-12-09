@@ -12,9 +12,9 @@ namespace DanielLochner.Assets.SimpleSideMenu
     public class SimpleSideMenuEditor : SSMCopyrightEditor
     {
         #region Fields
-        private bool showBasicSettings = true, showDragSettings = true, showOverlaySettings = true, showEvents = true;
+        private bool showBasicSettings = true, showDragSettings = true, showOverlaySettings = true, showEvents = false;
         private SerializedProperty placement, defaultState, transitionSpeed, thresholdDragSpeed, thresholdDragDistance, thresholdDraggedFraction, handle, handleDraggable, handleToggleStateOnPressed, menuDraggable, useOverlay, overlayColour, useBlur, blurMaterial, blurRadius, overlaySwipe, overlayRetractOnPressed, onStateChanged, onStateSelected, onStateChanging, onStateSelecting;
-        private SimpleSideMenu.State editorState;
+        private State editorState;
         private SimpleSideMenu simpleSideMenu;
         #endregion
 
@@ -62,15 +62,15 @@ namespace DanielLochner.Assets.SimpleSideMenu
 
         private void ShowCurrentStateSettings()
         {
-            editorState = (Application.isPlaying) ? simpleSideMenu.TargetState : simpleSideMenu.defaultState;
+            editorState = (Application.isPlaying) ? simpleSideMenu.TargetState : simpleSideMenu.DefaultState;
             #region Close
             EditorGUILayout.BeginHorizontal();
-            using (new EditorGUI.DisabledScope(editorState == SimpleSideMenu.State.Closed))
+            using (new EditorGUI.DisabledScope(editorState == State.Closed))
             {
                 if (GUILayout.Button("Close"))
                 {
                     simpleSideMenu.Close();
-                    if (!Application.isPlaying) simpleSideMenu.defaultState = SimpleSideMenu.State.Closed;
+                    if (!Application.isPlaying) simpleSideMenu.DefaultState = State.Closed;
                 }
             }
             #endregion
@@ -80,25 +80,25 @@ namespace DanielLochner.Assets.SimpleSideMenu
                 simpleSideMenu.ToggleState();
                 if (!Application.isPlaying)
                 {
-                    switch (simpleSideMenu.defaultState)
+                    switch (simpleSideMenu.DefaultState)
                     {
-                        case SimpleSideMenu.State.Closed:
-                            simpleSideMenu.defaultState = SimpleSideMenu.State.Open;
+                        case State.Closed:
+                            simpleSideMenu.DefaultState = State.Open;
                             break;
-                        case SimpleSideMenu.State.Open:
-                            simpleSideMenu.defaultState = SimpleSideMenu.State.Closed;
+                        case State.Open:
+                            simpleSideMenu.DefaultState = State.Closed;
                             break;
                     }
                 }
             }
             #endregion
             #region Open
-            using (new EditorGUI.DisabledScope(editorState == SimpleSideMenu.State.Open))
+            using (new EditorGUI.DisabledScope(editorState == State.Open))
             {
                 if (GUILayout.Button("Open"))
                 {
                     simpleSideMenu.Open();
-                    if (!Application.isPlaying) simpleSideMenu.defaultState = SimpleSideMenu.State.Open;
+                    if (!Application.isPlaying) simpleSideMenu.DefaultState = State.Open;
                 }
             }
             EditorGUILayout.EndHorizontal();
@@ -132,7 +132,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
                 EditorGUILayout.PropertyField(thresholdDragSpeed, new GUIContent("Threshold Drag Speed", "The minimum speed required when dragging that will allow a transition to the next state to occur."));
                 EditorGUILayout.Slider(thresholdDraggedFraction, 0f, 1f, new GUIContent("Threshold Dragged Fraction", "The fraction of the fully opened menu that must be dragged before a transition will occur to the next state if the current drag speed does not exceed the threshold drag speed set."));
                 EditorGUILayout.ObjectField(handle, typeof(GameObject), new GUIContent("Handle", "(Optional) GameObject used to open and close the side menu by dragging or pressing (when a \"Button\" component has been added)."));
-                if (simpleSideMenu.handle != null)
+                if (simpleSideMenu.Handle != null)
                 {
                     EditorGUI.indentLevel++;
                     EditorGUILayout.PropertyField(handleDraggable, new GUIContent("Draggable", "Should the handle be able to be used to drag the Side-Menu?"));
@@ -153,12 +153,12 @@ namespace DanielLochner.Assets.SimpleSideMenu
             if (showOverlaySettings)
             {
                 EditorGUILayout.PropertyField(useOverlay, new GUIContent("Use Overlay", "Should an overlay be used when the Side-Menu is opened/closed?"));
-                if (simpleSideMenu.useOverlay)
+                if (simpleSideMenu.UseOverlay)
                 {
                     EditorGUI.indentLevel++;
                     EditorGUILayout.PropertyField(overlayColour, new GUIContent("Colour", "The colour of the overlay when fully opened."));
                     EditorGUILayout.PropertyField(useBlur, new GUIContent("Blur", "Should a blur effect be applied to the overlay?"));
-                    if (simpleSideMenu.useBlur)
+                    if (simpleSideMenu.UseBlur)
                     {
                         EditorGUI.indentLevel++;
                         EditorGUILayout.PropertyField(blurMaterial, new GUIContent("Material", "The material applied to the background blur. For the default render pipeline, please use the material provided."));
@@ -186,218 +186,6 @@ namespace DanielLochner.Assets.SimpleSideMenu
                 EditorGUILayout.PropertyField(onStateChanging, new GUIContent("On State Changing"));
                 EditorGUILayout.PropertyField(onStateChanged, new GUIContent("On State Changed"));
             }
-        }
-
-        [MenuItem("GameObject/UI/Simple Side-Menu/Left Side-Menu", false)]
-        private static void CreateLeftSideMenu()
-        {
-            // Canvas
-            Canvas canvas = FindObjectOfType<Canvas>();
-            if (canvas == null)
-            {
-                GameObject canvasObject = new GameObject("Canvas");
-                canvas = canvasObject.AddComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                canvas.gameObject.AddComponent<GraphicRaycaster>();
-                Undo.RegisterCreatedObjectUndo(canvasObject, "Create " + canvasObject.name);
-            }
-
-            // Side-Menu
-            GameObject sideMenu = new GameObject("Left Side-Menu");
-            RectTransform sideMenuRectTransform = sideMenu.AddComponent<RectTransform>();
-            sideMenuRectTransform.anchorMin = new Vector2(0, 0);
-            sideMenuRectTransform.anchorMax = new Vector2(0, 1);
-            sideMenuRectTransform.pivot = new Vector2(1, 0.5f);
-            sideMenuRectTransform.sizeDelta = new Vector2(500, 0);
-            sideMenu.AddComponent<Image>();
-            SimpleSideMenu sideMenuSimpleSideMenu = sideMenu.AddComponent<SimpleSideMenu>();
-            GameObjectUtility.SetParentAndAlign(sideMenu, canvas.gameObject);
-
-            // Side-Menu Handle
-            GameObject sideMenuHandle = new GameObject("Handle");
-            RectTransform sideMenuHandleRectTransform = sideMenuHandle.AddComponent<RectTransform>();
-            sideMenuHandleRectTransform.anchorMin = new Vector2(1, 0.5f);
-            sideMenuHandleRectTransform.anchorMax = new Vector2(1, 0.5f);
-            sideMenuHandleRectTransform.pivot = new Vector2(0, 0.5f);
-            sideMenuHandleRectTransform.offsetMin = Vector2.zero;
-            sideMenuHandleRectTransform.offsetMax = Vector2.zero;
-            sideMenuHandleRectTransform.anchoredPosition = Vector2.zero;
-            sideMenuHandleRectTransform.sizeDelta = new Vector2(75, 200);
-            sideMenuHandle.AddComponent<Image>();
-            sideMenuHandle.AddComponent<Button>();
-            sideMenuSimpleSideMenu.handle = sideMenuHandle;
-            GameObjectUtility.SetParentAndAlign(sideMenuHandle, sideMenu);
-
-            // Event System
-            if (!FindObjectOfType<EventSystem>())
-            {
-                GameObject eventObject = new GameObject("EventSystem", typeof(EventSystem));
-                eventObject.AddComponent<StandaloneInputModule>();
-                Undo.RegisterCreatedObjectUndo(eventObject, "Create " + eventObject.name);
-            }
-
-            // Editor
-            Selection.activeGameObject = sideMenu;
-            Undo.RegisterCreatedObjectUndo(sideMenu, "Create " + sideMenu.name);
-        }
-        [MenuItem("GameObject/UI/Simple Side-Menu/Right Side-Menu", false)]
-        private static void CreateRightSideMenu()
-        {
-            // Canvas
-            Canvas canvas = FindObjectOfType<Canvas>();
-            if (canvas == null)
-            {
-                GameObject canvasObject = new GameObject("Canvas");
-                canvas = canvasObject.AddComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                canvas.gameObject.AddComponent<GraphicRaycaster>();
-                Undo.RegisterCreatedObjectUndo(canvasObject, "Create " + canvasObject.name);
-            }
-
-            // Side-Menu
-            GameObject sideMenu = new GameObject("Right Side-Menu");
-            RectTransform sideMenuRectTransform = sideMenu.AddComponent<RectTransform>();
-            sideMenuRectTransform.anchorMin = new Vector2(1, 0);
-            sideMenuRectTransform.anchorMax = new Vector2(1, 1);
-            sideMenuRectTransform.pivot = new Vector2(0, 0.5f);
-            sideMenuRectTransform.sizeDelta = new Vector2(500, 0);
-            sideMenu.AddComponent<Image>();
-            SimpleSideMenu sideMenuSimpleSideMenu = sideMenu.AddComponent<SimpleSideMenu>();
-            sideMenuSimpleSideMenu.placement = SimpleSideMenu.Placement.Right;
-            GameObjectUtility.SetParentAndAlign(sideMenu, canvas.gameObject);
-
-            // Side-Menu Handle
-            GameObject sideMenuHandle = new GameObject("Handle");
-            RectTransform sideMenuHandleRectTransform = sideMenuHandle.AddComponent<RectTransform>();
-            sideMenuHandleRectTransform.anchorMin = new Vector2(0, 0.5f);
-            sideMenuHandleRectTransform.anchorMax = new Vector2(0, 0.5f);
-            sideMenuHandleRectTransform.pivot = new Vector2(1, 0.5f);
-            sideMenuHandleRectTransform.offsetMin = Vector2.zero;
-            sideMenuHandleRectTransform.offsetMax = Vector2.zero;
-            sideMenuHandleRectTransform.anchoredPosition = Vector2.zero;
-            sideMenuHandleRectTransform.sizeDelta = new Vector2(75, 200);
-            sideMenuHandle.AddComponent<Image>();
-            sideMenuHandle.AddComponent<Button>();
-            sideMenuSimpleSideMenu.handle = sideMenuHandle;
-            GameObjectUtility.SetParentAndAlign(sideMenuHandle, sideMenu);
-
-            // Event System
-            if (!FindObjectOfType<EventSystem>())
-            {
-                GameObject eventObject = new GameObject("EventSystem", typeof(EventSystem));
-                eventObject.AddComponent<StandaloneInputModule>();
-                Undo.RegisterCreatedObjectUndo(eventObject, "Create " + eventObject.name);
-            }
-
-            // Editor
-            Selection.activeGameObject = sideMenu;
-            Undo.RegisterCreatedObjectUndo(sideMenu, "Create " + sideMenu.name);
-        }
-        [MenuItem("GameObject/UI/Simple Side-Menu/Top Side-Menu", false)]
-        private static void CreateTopSideMenu()
-        {
-            // Canvas
-            Canvas canvas = FindObjectOfType<Canvas>();
-            if (canvas == null)
-            {
-                GameObject canvasObject = new GameObject("Canvas");
-                canvas = canvasObject.AddComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                canvas.gameObject.AddComponent<GraphicRaycaster>();
-                Undo.RegisterCreatedObjectUndo(canvasObject, "Create " + canvasObject.name);
-            }
-
-            // Side-Menu
-            GameObject sideMenu = new GameObject("Top Side-Menu");
-            RectTransform sideMenuRectTransform = sideMenu.AddComponent<RectTransform>();
-            sideMenuRectTransform.anchorMin = new Vector2(0, 1);
-            sideMenuRectTransform.anchorMax = new Vector2(1, 1);
-            sideMenuRectTransform.pivot = new Vector2(0.5f, 0);
-            sideMenuRectTransform.sizeDelta = new Vector2(0, 500);
-            sideMenu.AddComponent<Image>();
-            SimpleSideMenu sideMenuSimpleSideMenu = sideMenu.AddComponent<SimpleSideMenu>();
-            sideMenuSimpleSideMenu.placement = SimpleSideMenu.Placement.Top;
-            GameObjectUtility.SetParentAndAlign(sideMenu, canvas.gameObject);
-
-            // Side-Menu Handle
-            GameObject sideMenuHandle = new GameObject("Handle");
-            RectTransform sideMenuHandleRectTransform = sideMenuHandle.AddComponent<RectTransform>();
-            sideMenuHandleRectTransform.anchorMin = new Vector2(0.5f, 0);
-            sideMenuHandleRectTransform.anchorMax = new Vector2(0.5f, 0);
-            sideMenuHandleRectTransform.pivot = new Vector2(0.5f, 1);
-            sideMenuHandleRectTransform.offsetMin = Vector2.zero;
-            sideMenuHandleRectTransform.offsetMax = Vector2.zero;
-            sideMenuHandleRectTransform.anchoredPosition = Vector2.zero;
-            sideMenuHandleRectTransform.sizeDelta = new Vector2(200, 75);
-            sideMenuHandle.AddComponent<Image>();
-            sideMenuHandle.AddComponent<Button>();
-            sideMenuSimpleSideMenu.handle = sideMenuHandle;
-            GameObjectUtility.SetParentAndAlign(sideMenuHandle, sideMenu);
-
-            // Event System
-            if (!FindObjectOfType<EventSystem>())
-            {
-                GameObject eventObject = new GameObject("EventSystem", typeof(EventSystem));
-                eventObject.AddComponent<StandaloneInputModule>();
-                Undo.RegisterCreatedObjectUndo(eventObject, "Create " + eventObject.name);
-            }
-
-            // Editor
-            Selection.activeGameObject = sideMenu;
-            Undo.RegisterCreatedObjectUndo(sideMenu, "Create " + sideMenu.name);
-        }
-        [MenuItem("GameObject/UI/Simple Side-Menu/Bottom Side-Menu", false)]
-        private static void CreateBottomSideMenu()
-        {
-            // Canvas
-            Canvas canvas = FindObjectOfType<Canvas>();
-            if (canvas == null)
-            {
-                GameObject canvasObject = new GameObject("Canvas");
-                canvas = canvasObject.AddComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                canvas.gameObject.AddComponent<GraphicRaycaster>();
-                Undo.RegisterCreatedObjectUndo(canvasObject, "Create " + canvasObject.name);
-            }
-
-            // Side-Menu
-            GameObject sideMenu = new GameObject("Bottom Side-Menu");
-            RectTransform sideMenuRectTransform = sideMenu.AddComponent<RectTransform>();
-            sideMenuRectTransform.anchorMin = new Vector2(0, 0);
-            sideMenuRectTransform.anchorMax = new Vector2(1, 0);
-            sideMenuRectTransform.pivot = new Vector2(0.5f, 1);
-            sideMenuRectTransform.sizeDelta = new Vector2(0, 500);
-            sideMenu.AddComponent<Image>();
-            SimpleSideMenu sideMenuSimpleSideMenu = sideMenu.AddComponent<SimpleSideMenu>();
-            sideMenuSimpleSideMenu.placement = SimpleSideMenu.Placement.Bottom;
-            GameObjectUtility.SetParentAndAlign(sideMenu, canvas.gameObject);
-
-            // Side-Menu Handle
-            GameObject sideMenuHandle = new GameObject("Handle");
-            RectTransform sideMenuHandleRectTransform = sideMenuHandle.AddComponent<RectTransform>();
-            sideMenuHandleRectTransform.anchorMin = new Vector2(0.5f, 1);
-            sideMenuHandleRectTransform.anchorMax = new Vector2(0.5f, 1);
-            sideMenuHandleRectTransform.pivot = new Vector2(0.5f, 0);
-            sideMenuHandleRectTransform.offsetMin = Vector2.zero;
-            sideMenuHandleRectTransform.offsetMax = Vector2.zero;
-            sideMenuHandleRectTransform.anchoredPosition = Vector2.zero;
-            sideMenuHandleRectTransform.sizeDelta = new Vector2(200, 75);
-            sideMenuHandle.AddComponent<Image>();
-            sideMenuHandle.AddComponent<Button>();
-            sideMenuSimpleSideMenu.handle = sideMenuHandle;
-            GameObjectUtility.SetParentAndAlign(sideMenuHandle, sideMenu);
-
-            // Event System
-            if (!FindObjectOfType<EventSystem>())
-            {
-                GameObject eventObject = new GameObject("EventSystem", typeof(EventSystem));
-                eventObject.AddComponent<StandaloneInputModule>();
-                Undo.RegisterCreatedObjectUndo(eventObject, "Create " + eventObject.name);
-            }
-
-            // Editor
-            Selection.activeGameObject = sideMenu;
-            Undo.RegisterCreatedObjectUndo(sideMenu, "Create " + sideMenu.name);
         }
         #endregion
     }
