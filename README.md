@@ -1,7 +1,9 @@
-# Simple Scroll-Snap
-"Simple Side-Menu" is a simple solution to adding sliding side menus into your Unity project which work extremely well for both mobile and desktop applications.
-
-Try out the demo [here](https://daniellochner.itch.io/unity3d-assets)!
+<h1 align="middle">Simple Side-Menu</h1>
+<p align="middle">
+  <img src="https://user-images.githubusercontent.com/37551307/145454222-5939f323-57a4-4f1d-8852-742c537ccd15.jpg">
+</p>
+<p align="middle">"Simple Side-Menu" is a simple solution to adding sliding side menus into your Unity project which work extremely well for both mobile and desktop applications.</p>
+<p align="middle">Try out the demo <a href="https://daniellochner.itch.io/unity3d-assets">here</a>.
 
 ## Features:
 - Easy to use and highly customizable.
