@@ -1,8 +1,6 @@
 <h1 align="middle">Simple Side-Menu</h1>
 <p align="middle">
-  <img src="https://user-images.githubusercontent.com/37551307/145455141-0c5e4819-412b-4b7e-b37c-f905c49688f5.jpg" height=275>
-  <img src="https://user-images.githubusercontent.com/37551307/145456049-ff19a6e7-5021-443d-bb13-b320c0fad535.jpg" height=275>
-  <img src="https://user-images.githubusercontent.com/37551307/145456060-4093e100-91d2-4c76-b6fa-b6cec42d859e.jpg" height=275>
+  <img src="https://user-images.githubusercontent.com/37551307/145458140-7b8d9b16-967d-4d43-823e-1fd0acbd0a66.jpg" width="100%">
 </p>
 <p align="middle">"Simple Side-Menu" is a simple solution to adding sliding side menus into your Unity project which work extremely well for both mobile and desktop applications.</p>
 <p align="middle">Try out the demo <a href="https://daniellochner.itch.io/unity3d-assets">here</a>.
