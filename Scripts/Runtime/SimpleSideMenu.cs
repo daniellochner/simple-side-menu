@@ -243,6 +243,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
                 overlay.transform.parent = transform.parent;
                 overlay.transform.localScale = Vector3.one;
                 overlay.transform.SetSiblingIndex(transform.GetSiblingIndex());
+				overlay.layer = gameObject.layer;
 
                 if (useBlur)
                 {
