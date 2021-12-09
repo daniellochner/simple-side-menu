@@ -123,11 +123,11 @@ namespace DanielLochner.Assets.SimpleSideMenu
                 if (sideMenu.Handle != null)
                 {
                     EditorGUI.indentLevel++;
-                    EditorGUILayout.PropertyField(isHandleDraggable, new GUIContent("Draggable", "Should the handle be able to be used to drag the Side-Menu?"));
+                    EditorGUILayout.PropertyField(isHandleDraggable, new GUIContent("Is Draggable", "Should the handle be able to be used to drag the Side-Menu?"));
                     EditorGUILayout.PropertyField(handleToggleStateOnPressed, new GUIContent("Toggle State on Pressed", "Should the Side-Menu toggle its state (open/close) when the handle is pressed?"));
                     EditorGUI.indentLevel--;
                 }
-                EditorGUILayout.PropertyField(isMenuDraggable, new GUIContent("Menu Draggable", "Should the Side-Menu (itself) be able to be used to drag the Side-Menu?"));
+                EditorGUILayout.PropertyField(isMenuDraggable, new GUIContent("Is Menu Draggable", "Should the Side-Menu (itself) be able to be used to drag the Side-Menu?"));
             }
             EditorGUILayout.Space();
         }
@@ -141,7 +141,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
                 {
                     EditorGUI.indentLevel++;
                     EditorGUILayout.PropertyField(overlayColour, new GUIContent("Colour", "The colour of the overlay when fully opened."));
-                    EditorGUILayout.PropertyField(useBlur, new GUIContent("Blur", "Should a blur effect be applied to the overlay?"));
+                    EditorGUILayout.PropertyField(useBlur, new GUIContent("Use Blur", "Should a blur effect be applied to the overlay?"));
                     if (sideMenu.UseBlur)
                     {
                         EditorGUI.indentLevel++;
