@@ -13,28 +13,35 @@ namespace DanielLochner.Assets.SimpleSideMenu
     public class SimpleSideMenu : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IInitializePotentialDragHandler
     {
         #region Fields
+        // Basic Settings
         [SerializeField] private Placement placement = Placement.Left;
         [SerializeField] private State defaultState = State.Closed;
         [SerializeField] private float transitionSpeed = 10f;
+
+        // Drag Settings
         [SerializeField] private float thresholdDragSpeed = 0f;
         [SerializeField] private float thresholdDraggedFraction = 0.5f;
         [SerializeField] private GameObject handle = null;
         [SerializeField] private bool handleDraggable = true;
         [SerializeField] private bool menuDraggable = false;
         [SerializeField] private bool handleToggleStateOnPressed = true;
+
+        // Overlay Settings
         [SerializeField] private bool useOverlay = true;
         [SerializeField] private Color overlayColour = new Color(0, 0, 0, 0.25f);
         [SerializeField] private bool useBlur = false;
+        [SerializeField] private Material blurMaterial;
         [SerializeField] private int blurRadius = 10;
         [SerializeField] private bool overlayCloseOnPressed = true;
+
+        // Events
         [SerializeField] private UnityEvent onStateSelecting = new UnityEvent();
         [SerializeField] private UnityEvent onStateSelected = new UnityEvent();
         [SerializeField] private UnityEvent onStateChanging = new UnityEvent();
         [SerializeField] private UnityEvent onStateChanged = new UnityEvent();
-        [SerializeField] private Material blurMaterial;
 
         private float previousTime;
-        private bool dragging, potentialDrag;
+        private bool isDragging, isPotentialDrag;
         private Vector2 closedPosition, openPosition, startPosition, releaseVelocity, dragVelocity, menuSize;
         private Vector3 previousPosition;
         private GameObject overlay, blur;
@@ -132,45 +139,87 @@ namespace DanielLochner.Assets.SimpleSideMenu
             get => onStateChanged;
         }
 
-        public State CurrentState { get; set; }
-        public State TargetState { get; set; }
+        public State CurrentState
+        {
+            get;
+            private set;
+        }
+        public State TargetState
+        {
+            get;
+            private set;
+        }
 
-        public float StateProgress { get { return ((rectTransform.anchoredPosition - closedPosition).magnitude / ((placement == Placement.Left || placement == Placement.Right) ? rectTransform.rect.width : rectTransform.rect.height)); } }
+        public float StateProgress
+        {
+            get
+            {
+                bool isLeftOrRight = (placement == Placement.Left) || (placement == Placement.Right);
+                return ((rectTransform.anchoredPosition - closedPosition).magnitude / (isLeftOrRight ? rectTransform.rect.width : rectTransform.rect.height));
+            }
+        }
+        private bool IsValidConfig
+        {
+            get
+            {
+                bool valid = true;
+
+                if (transitionSpeed <= 0)
+                {
+                    Debug.LogError("<b>[SimpleSideMenu]</b> Transition speed cannot be less than or equal to zero.", gameObject);
+                    valid = false;
+                }
+                if (handle != null && handleDraggable && handle.transform.parent != rectTransform)
+                {
+                    Debug.LogError("<b>[SimpleSideMenu]</b> The drag handle must be a child of the side menu in order for it to be draggable.", gameObject);
+                    valid = false;
+                }
+                if (handleToggleStateOnPressed && handle.GetComponent<Button>() == null)
+                {
+                    Debug.LogError("<b>[SimpleSideMenu]</b> The handle must have a \"Button\" component attached to it in order for it to be able to toggle the state of the side menu when pressed.", gameObject);
+                    valid = false;
+                }
+
+                return valid;
+            }
+        }
         #endregion
 
         #region Methods
-        private void Start()
+        private void Awake()
         {
             Initialize();
-
-            if (Validate())
+        }
+        private void Start()
+        {
+            if (IsValidConfig)
             {
                 Setup();
             }
             else
             {
-                throw new Exception("Invalid inspector input.");
+                throw new Exception("Invalid configuration.");
             }
         }
         private void Update()
         {
-            OnStateUpdate();
-            OnOverlayUpdate();
+            HandleState();
+            HandleOverlay();
         }
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         private void OnValidate()
         {
             Initialize();
         }
-        #endif
+#endif
 
         public void OnInitializePotentialDrag(PointerEventData eventData)
         {
-            potentialDrag = (handleDraggable && eventData.pointerEnter == handle) || (menuDraggable && eventData.pointerEnter == gameObject);
+            isPotentialDrag = (handleDraggable && eventData.pointerEnter == handle) || (menuDraggable && eventData.pointerEnter == gameObject);
         }
         public void OnBeginDrag(PointerEventData eventData)
         {
-            dragging = potentialDrag;
+            isDragging = isPotentialDrag;
 
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRectTransform, eventData.position, canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera, out Vector2 mouseLocalPosition))
             {
@@ -180,16 +229,13 @@ namespace DanielLochner.Assets.SimpleSideMenu
         }
         public void OnDrag(PointerEventData eventData)
         {
-            if (dragging && RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRectTransform, eventData.position, canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera, out Vector2 mouseLocalPosition))
+            if (isDragging && RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRectTransform, eventData.position, canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera, out Vector2 mouseLocalPosition))
             {
                 Vector2 displacement = ((TargetState == State.Closed) ? closedPosition : openPosition) + (mouseLocalPosition - startPosition);
-
-                float x = (placement == Placement.Left || placement == Placement.Right) ? displacement.x : rectTransform.anchoredPosition.x;
-                float y = (placement == Placement.Top || placement == Placement.Bottom) ? displacement.y : rectTransform.anchoredPosition.y;
-
+                float x = (placement == Placement.Left || placement == Placement.Right)  ? displacement.x : rectTransform.anchoredPosition.x;
+                float y = (placement == Placement.Top  || placement == Placement.Bottom) ? displacement.y : rectTransform.anchoredPosition.y;
                 Vector2 min = new Vector2(Math.Min(closedPosition.x, openPosition.x), Math.Min(closedPosition.y, openPosition.y));
                 Vector2 max = new Vector2(Math.Max(closedPosition.x, openPosition.x), Math.Max(closedPosition.y, openPosition.y));
-
                 rectTransform.anchoredPosition = new Vector2(Mathf.Clamp(x, min.x, max.x), Mathf.Clamp(y, min.y, max.y));
 
                 onStateSelecting.Invoke();
@@ -201,10 +247,67 @@ namespace DanielLochner.Assets.SimpleSideMenu
         }
         public void OnEndDrag(PointerEventData eventData)
         {
-            dragging = false;
-
+            isDragging = false;
             releaseVelocity = dragVelocity;
-            OnTargetUpdate();
+
+            if (releaseVelocity.magnitude > thresholdDragSpeed)
+            {
+                switch (placement)
+                {
+                    case Placement.Left:
+                        if (releaseVelocity.x > 0)
+                        {
+                            Open();
+                        }
+                        else
+                        {
+                            Close();
+                        }
+                        break;
+                    case Placement.Right:
+                        if (releaseVelocity.x < 0)
+                        {
+                            Open();
+                        }
+                        else
+                        {
+                            Close();
+                        }
+                        break;
+                    case Placement.Top:
+                        if (releaseVelocity.y < 0)
+                        {
+                            Open();
+                        }
+                        else
+                        {
+                            Close();
+                        }
+                        break;
+                    case Placement.Bottom:
+                        if (releaseVelocity.y > 0)
+                        {
+                            Open();
+                        }
+                        else
+                        {
+                            Close();
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                float nextStateProgress = (TargetState == State.Open) ? 1 - StateProgress : StateProgress;
+                if (nextStateProgress > thresholdDraggedFraction)
+                {
+                    ToggleState();
+                }
+                else
+                {
+                    SetState(CurrentState);
+                }
+            }
         }
 
         private void Initialize()
@@ -218,31 +321,9 @@ namespace DanielLochner.Assets.SimpleSideMenu
                 canvasRectTransform = canvas.GetComponent<RectTransform>();
             }
         }
-        private bool Validate()
-        {
-            bool valid = true;
-
-            if (transitionSpeed <= 0)
-            {
-                Debug.LogError("<b>[SimpleSideMenu]</b> Transition speed cannot be less than or equal to zero.", gameObject);
-                valid = false;
-            }
-            if (handle != null && handleDraggable && handle.transform.parent != rectTransform)
-            {
-                Debug.LogError("<b>[SimpleSideMenu]</b> The drag handle must be a child of the side menu in order for it to be draggable.", gameObject);
-                valid = false;
-            }
-            if (handleToggleStateOnPressed && handle.GetComponent<Button>() == null)
-            {
-                Debug.LogError("<b>[SimpleSideMenu]</b> The handle must have a \"Button\" component attached to it in order for it to be able to toggle the state of the side menu when pressed.", gameObject);
-                valid = false;
-            }
-
-            return valid;
-        }
         private void Setup()
         {
-            //Canvas & Camera
+            // Canvas and Camera
             if (canvas.renderMode == RenderMode.ScreenSpaceCamera)
             {
                 canvas.planeDistance = (canvasRectTransform.rect.height / 2f) / Mathf.Tan((canvas.worldCamera.fieldOfView / 2f) * Mathf.Deg2Rad);
@@ -252,7 +333,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
                 }
             }
 
-            //Placement
+            // Placement
             Vector2 anchorMin = Vector2.zero;
             Vector2 anchorMax = Vector2.zero;
             Vector2 pivot = Vector2.zero;
@@ -292,17 +373,16 @@ namespace DanielLochner.Assets.SimpleSideMenu
             rectTransform.anchorMax = anchorMax;
             rectTransform.pivot = pivot;
 
-            //Default State
+            // Default State
             SetState(CurrentState = defaultState);
             rectTransform.anchoredPosition = (defaultState == State.Closed) ? closedPosition : openPosition;
 
-            //Drag Handle
+            // Drag Handle
             if (handle != null)
             {
-                //Toggle State on Pressed
                 if (handleToggleStateOnPressed)
                 {
-                    handle.GetComponent<Button>().onClick.AddListener(delegate { ToggleState(); });
+                    handle.GetComponent<Button>().onClick.AddListener(ToggleState);
                 }
                 foreach (Text text in handle.GetComponentsInChildren<Text>())
                 {
@@ -310,7 +390,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
                 }
             }
 
-            //Overlay
+            // Overlay
             if (useOverlay)
             {
                 overlay = new GameObject(gameObject.name + " (Overlay)");
@@ -350,72 +430,9 @@ namespace DanielLochner.Assets.SimpleSideMenu
             }
         }
 
-        private void OnTargetUpdate()
+        private void HandleState()
         {
-            if (releaseVelocity.magnitude > thresholdDragSpeed)
-            {
-                if (placement == Placement.Left)
-                {
-                    if (releaseVelocity.x > 0)
-                    {
-                        Open();
-                    }
-                    else
-                    {
-                        Close();
-                    }
-                }
-                else if (placement == Placement.Right)
-                {
-                    if (releaseVelocity.x < 0)
-                    {
-                        Open();
-                    }
-                    else
-                    {
-                        Close();
-                    }
-                }
-                else if (placement == Placement.Top)
-                {
-                    if (releaseVelocity.y < 0)
-                    {
-                        Open();
-                    }
-                    else
-                    {
-                        Close();
-                    }
-                }
-                else
-                {
-                    if (releaseVelocity.y > 0)
-                    {
-                        Open();
-                    }
-                    else
-                    {
-                        Close();
-                    }
-                }
-            }
-            else
-            {
-                float nextStateProgress = (TargetState == State.Open) ? 1 - StateProgress : StateProgress;
-
-                if (nextStateProgress > thresholdDraggedFraction)
-                {
-                    ToggleState();
-                }
-                else
-                {
-                    SetState(CurrentState);
-                }
-            }   
-        }
-        private void OnStateUpdate()
-        {
-            if (!dragging)
+            if (!isDragging)
             {
                 Vector2 targetPosition = (TargetState == State.Closed) ? closedPosition : openPosition;
                 rectTransform.anchoredPosition = Vector2.Lerp(rectTransform.anchoredPosition, targetPosition, Time.unscaledDeltaTime * transitionSpeed);
@@ -434,7 +451,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
                 }
             }
         }
-        private void OnOverlayUpdate()
+        private void HandleOverlay()
         {
             if (useOverlay)
             {
