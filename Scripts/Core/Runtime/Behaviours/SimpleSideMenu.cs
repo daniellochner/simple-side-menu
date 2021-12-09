@@ -468,20 +468,4 @@ namespace DanielLochner.Assets.SimpleSideMenu
         }     
         #endregion
     }
-
-    #region Enumerators
-    public enum Placement
-    {
-        Left,
-        Right,
-        Top,
-        Bottom
-    }
-    public enum State
-    {
-        Closed,
-        Open
-    }
-    #endregion
-
 }
