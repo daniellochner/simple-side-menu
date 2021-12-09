@@ -1,6 +1,5 @@
 ﻿// Simple Side-Menu - https://assetstore.unity.com/packages/tools/gui/simple-side-menu-143623
-// Version: 1.0.3
-// Author: Daniel Lochner
+// Copyright (c) Daniel Lochner
 
 using UnityEditor;
 using UnityEngine;
@@ -10,7 +9,7 @@ using UnityEngine.UI;
 namespace DanielLochner.Assets.SimpleSideMenu
 {
     [CustomEditor(typeof(SimpleSideMenu))]
-    public class SimpleSideMenuEditor : Editor
+    public class SimpleSideMenuEditor : SSMCopyrightEditor
     {
         #region Fields
         private bool showBasicSettings = true, showDragSettings = true, showOverlaySettings = true, showEvents = true;
@@ -24,7 +23,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
         {
             simpleSideMenu = target as SimpleSideMenu;
 
-            //Serialized Properties
+            #region Serialized Properties
             placement = serializedObject.FindProperty("placement");
             defaultState = serializedObject.FindProperty("defaultState");
             transitionSpeed = serializedObject.FindProperty("transitionSpeed");
@@ -44,32 +43,24 @@ namespace DanielLochner.Assets.SimpleSideMenu
             onStateSelecting = serializedObject.FindProperty("onStateSelecting");
             onStateChanging = serializedObject.FindProperty("onStateChanging");
             onStateChanged = serializedObject.FindProperty("onStateChanged");
+            #endregion
         }
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
-            HeaderInformation();
-            CurrentStateSettings();
-
-            BasicSettings();
-            DragSettings();
-            OverlaySettings();
-            EventHandlers();
+            ShowCopyrightNotice();
+            ShowCurrentStateSettings();
+            ShowBasicSettings();
+            ShowDragSettings();
+            ShowOverlaySettings();
+            ShowEvents();
 
             serializedObject.ApplyModifiedProperties();
             PrefabUtility.RecordPrefabInstancePropertyModifications(simpleSideMenu);
         }
 
-        private void HeaderInformation()
-        {
-            GUILayout.BeginVertical("HelpBox");
-            GUILayout.Label("Simple Side-Menu", new GUIStyle() { fontSize = 30, alignment = TextAnchor.MiddleCenter });
-            GUILayout.Label("Version: 1.0.3", new GUIStyle() { fontSize = 14, alignment = TextAnchor.MiddleCenter });
-            GUILayout.Label("Author: Daniel Lochner", new GUIStyle() { fontSize = 14, alignment = TextAnchor.MiddleCenter });
-            GUILayout.EndVertical();
-        }
-        private void CurrentStateSettings()
+        private void ShowCurrentStateSettings()
         {
             editorState = (Application.isPlaying) ? simpleSideMenu.TargetState : simpleSideMenu.defaultState;
             #region Close
@@ -115,7 +106,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
             #endregion
         }
 
-        private void BasicSettings()
+        private void ShowBasicSettings()
         {
             EditorStyles.foldout.fontStyle = FontStyle.Bold;
             showBasicSettings = EditorGUILayout.Foldout(showBasicSettings, "Basic Settings", true);
@@ -130,7 +121,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
 
             EditorGUILayout.Space();
         }
-        private void DragSettings()
+        private void ShowDragSettings()
         {
             EditorStyles.foldout.fontStyle = FontStyle.Bold;
             showDragSettings = EditorGUILayout.Foldout(showDragSettings, "Drag Settings", true);
@@ -153,7 +144,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
 
             EditorGUILayout.Space();
         }
-        private void OverlaySettings()
+        private void ShowOverlaySettings()
         {
             EditorStyles.foldout.fontStyle = FontStyle.Bold;
             showOverlaySettings = EditorGUILayout.Foldout(showOverlaySettings, "Overlay Settings", true);
@@ -182,7 +173,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
             EditorGUILayout.Space();
         }
 
-        private void EventHandlers()
+        private void ShowEvents()
         {
             EditorStyles.foldout.fontStyle = FontStyle.Bold;
             showEvents = EditorGUILayout.Foldout(showEvents, "Event Handlers", true);
