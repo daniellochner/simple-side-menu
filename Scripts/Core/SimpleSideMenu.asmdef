@@ -1,0 +1,16 @@
+{
+    "name": "SimpleSideMenu",
+    "rootNamespace": "",
+    "references": [
+        "GUID:12118caebfe178849a046b8f7807f49c"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

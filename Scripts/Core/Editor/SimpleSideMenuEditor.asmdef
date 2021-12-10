@@ -1,0 +1,20 @@
+{
+    "name": "SimpleSideMenuEditor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:5661c44a7b046cd4cb4f6777a441f81d",
+        "GUID:8ba351204c3a6df4aa826ac3f0423d50",
+        "GUID:8a8c5dc53dc04e0448389944602a225f"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
