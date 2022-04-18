@@ -169,7 +169,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
                     Debug.LogError("<b>[SimpleSideMenu]</b> Transition speed cannot be less than or equal to zero.", gameObject);
                     valid = false;
                 }
-                if (handle != null && isHandleDraggable && handle.transform.parent != rectTransform)
+                if (handle != null && isHandleDraggable && !handle.transform.IsChildOf(rectTransform))
                 {
                     Debug.LogError("<b>[SimpleSideMenu]</b> The drag handle must be a child of the side menu in order for it to be draggable.", gameObject);
                     valid = false;
